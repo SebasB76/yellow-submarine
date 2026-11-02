@@ -1,13 +1,12 @@
 # Yellow Submarine
 
 Yellow Submarine draws a pixel-art submarine from a GitHub account's public
-activity, as a looping GIF for a profile README. A nightly workflow redraws it
-from the day that just ended.
+activity, as a looping GIF for a profile README. The GIF is a 3:1 strip that
+fills the README's width. A nightly workflow redraws it from the day that just
+ended.
 
-<p align="center">
-  <img src="docs/day.gif" width="256" alt="A grown submarine cruising in morning water, with all four keepsakes on the seabed" />
-  <img src="docs/night.gif" width="256" alt="A submarine resting on the seabed at night after a day without contributions" />
-</p>
+<img src="docs/day.gif" width="100%" alt="A grown submarine cruising across morning water, with all four keepsakes on the seabed" />
+<img src="docs/night.gif" width="100%" alt="A submarine resting on the seabed at night after a day without contributions" />
 
 ## What changes it
 
@@ -15,7 +14,7 @@ from the day that just ended.
 | --- | --- |
 | Total contributions, all years | Size: hull length, portholes, and periscope height |
 | Weekly streak: consecutive Monday-Sunday weeks with a contribution | One colored stripe per 4 weeks, up to 5 |
-| Contributions on the day that just ended | Busy: fast propeller, bubbles, and music notes. Some: slow cruise. None: asleep on the seabed |
+| Contributions on the day that just ended | Busy: crosses twice per loop with bubbles and music notes. Some: crosses once. None: asleep on the seabed |
 | Hour of your public events in the last 7 days | Water: morning light, afternoon sunset, or night with moon and plankton |
 | Contribution milestones 100, 500, 1,000, 2,500 | A keepsake on the seabed: John's glasses, Paul's violin bass, George's sitar, Ringo's bass drum |
 
@@ -31,7 +30,7 @@ no private repositories.
 4. Add the GIF to your profile README:
 
    ```html
-   <img src="https://raw.githubusercontent.com/<you>/<you>/submarine/submarine.gif" width="256" alt="My submarine">
+   <img src="https://raw.githubusercontent.com/<you>/<you>/submarine/submarine.gif" width="100%" alt="My submarine">
    ```
 
 The workflow force-pushes only the latest GIF to a `submarine` branch, so the

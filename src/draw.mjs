@@ -3,9 +3,13 @@ import gifenc from 'gifenc';
 // gifenc ships CommonJS as its main entry, so named ESM imports fail.
 const { GIFEncoder, applyPalette, quantize } = gifenc;
 
-export const SIZE = 64;
-export const FRAMES = 48;
-const FRAME_DELAY_MS = 100;
+// A 3:1 strip fills a README's width without growing tall.
+export const WIDTH = 192;
+export const HEIGHT = 64;
+export const FRAMES = 96;
+const FRAME_DELAY_MS = 90;
+// The submarine leaves the strip fully before it re-enters, so the loop seam is hidden.
+const TRAVEL_MARGIN = 40;
 const TAU = Math.PI * 2;
 const STRIPES = ['#e63946', '#2a9d8f', '#f4a261', '#9b5de5', '#3a86ff'];
 const YELLOW = '#f7d117';
@@ -25,22 +29,22 @@ const SEABED_Y = 58;
 // One keepsake per Beatle, unlocked in this order; each row maps letters to colors.
 const BEATLE_KEEPSAKES = [
   {
-    name: 'john-glasses', x: 2, y: 59,
+    name: 'john-glasses', x: 22, y: 59,
     colors: { g: '#d4af37', l: '#9fd8e8' },
     rows: ['.gg...gg.', 'gllgggllg', 'gllg.gllg', '.gg...gg.'],
   },
   {
-    name: 'paul-violin-bass', x: 12, y: 50,
+    name: 'paul-violin-bass', x: 56, y: 50,
     colors: { n: '#3b2414', b: '#8b4a2b', c: '#d98c4a' },
     rows: ['..n..', '.nnn.', '..n..', '..n..', '..n..', '..n..', '.bnb.', 'bbcbb', '.bcb.', 'bbcbb', 'bbcbb', '.bbb.'],
   },
   {
-    name: 'george-sitar', x: 51, y: 45,
+    name: 'george-sitar', x: 134, y: 45,
     colors: { n: '#6b3e1f', f: '#e0c068', g: '#c98a3a', d: '#8a5a24' },
     rows: ['..g..', '.ggg.', '..n..', '..f..', '..n..', '..f..', '..n..', '..f..', '..n..', '..f..', '..n..', '.ggg.', 'ggggg', 'ggggd', 'gggdd', '.ddd.'],
   },
   {
-    name: 'ringo-bass-drum', x: 56, y: 55,
+    name: 'ringo-bass-drum', x: 162, y: 55,
     colors: { r: '#2b2b2b', h: '#f1ecdc', k: '#c0392b' },
     rows: ['..rrr..', '.rhhhr.', 'rhhhhhr', 'rhkkkhr', 'rhhhhhr', '.rhhhr.', '..rrr..'],
   },
@@ -58,12 +62,12 @@ function hash(x, y, salt = 0) {
 }
 
 function createCanvas() {
-  const pixels = new Uint8ClampedArray(SIZE * SIZE * 4);
+  const pixels = new Uint8ClampedArray(WIDTH * HEIGHT * 4);
   const px = (x, y, hex) => {
     x = Math.round(x); y = Math.round(y);
-    if (x < 0 || y < 0 || x >= SIZE || y >= SIZE) return;
+    if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) return;
     const [r, g, b] = toRgb(hex);
-    const i = (y * SIZE + x) * 4;
+    const i = (y * WIDTH + x) * 4;
     pixels[i] = r; pixels[i + 1] = g; pixels[i + 2] = b; pixels[i + 3] = 255;
   };
   const rect = (x, y, w, h, hex) => {
@@ -71,7 +75,7 @@ function createCanvas() {
   };
   const inEllipse = (x, y, cx, cy, rx, ry) => { const dx = (x + 0.5 - cx) / rx, dy = (y + 0.5 - cy) / ry; return dx * dx + dy * dy <= 1; };
   const fill = (inside, color) => {
-    for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
+    for (let y = 0; y < HEIGHT; y++) for (let x = 0; x < WIDTH; x++) {
       if (!inside(x, y)) continue;
       const edge = !inside(x - 1, y) || !inside(x + 1, y) || !inside(x, y - 1) || !inside(x, y + 1);
       const hex = color(x, y, edge);
@@ -79,7 +83,7 @@ function createCanvas() {
     }
   };
   const glyph = (rows, x, y, hex) => rows.forEach((row, j) => [...row].forEach((ch, i) => { if (ch === '#') px(x + i, y + j, hex); }));
-  const gradient = (top, bottom, from, to) => { for (let y = from; y < to; y++) rect(0, y, SIZE, 1, mix(top, bottom, (y - from) / (to - from))); };
+  const gradient = (top, bottom, from, to) => { for (let y = from; y < to; y++) rect(0, y, WIDTH, 1, mix(top, bottom, (y - from) / (to - from))); };
   return { pixels, px, rect, inEllipse, fill, glyph, gradient };
 }
 
@@ -90,18 +94,18 @@ function drawWater(p, ambientName, frame) {
   for (let y = 0; y < SEABED_Y; y++) {
     const t = y / SEABED_Y;
     const base = t < 0.4 ? mix(top, middle, t / 0.4) : mix(middle, bottom, (t - 0.4) / 0.6);
-    for (let x = 0; x < SIZE; x++) {
+    for (let x = 0; x < WIDTH; x++) {
       let hex = base;
       // Sun rays slant down and fade with depth; the shift spans one ray period per loop.
       if (ambient.ray && y < 44 && (x + y * 0.5 + rayShift) % 16 < 3) hex = mix(hex, ambient.ray, ambient.rayStrength * (1 - y / 44));
       p.px(x, y, hex);
     }
   }
-  p.gradient(ambient.sand[0], ambient.sand[1], SEABED_Y, SIZE);
+  p.gradient(ambient.sand[0], ambient.sand[1], SEABED_Y, HEIGHT);
   if (ambientName === 'night') {
-    p.fill((x, y) => p.inEllipse(x, y, 52, 7, 4, 4), (x, y, edge) => edge ? '#b9c2b0' : (hash(x, y, 9) < 0.2 ? '#cfd6c4' : '#eef2e0'));
-    for (let i = 0; i < 16; i++) {
-      const x = Math.floor(hash(i, 1, 11) * SIZE), y = 4 + Math.floor(hash(i, 2, 11) * 50);
+    p.fill((x, y) => p.inEllipse(x, y, 172, 8, 4, 4), (x, y, edge) => edge ? '#b9c2b0' : (hash(x, y, 9) < 0.2 ? '#cfd6c4' : '#eef2e0'));
+    for (let i = 0; i < 44; i++) {
+      const x = Math.floor(hash(i, 1, 11) * WIDTH), y = 4 + Math.floor(hash(i, 2, 11) * 50);
       const lit = (frame + i * 5) % 16 < 8;
       p.px(x, y, lit ? '#7ff7ff' : '#1d5a6a');
     }
@@ -125,14 +129,16 @@ export function drawFrame(submarine, frame) {
   const phase = frame / FRAMES;
 
   drawWater(p, submarine.ambient, frame);
-  [22, 30, 46].forEach((baseX, j) => {
-    for (let k = 0; k < 7 + j; k++) {
+  [8, 40, 84, 110, 148, 184].forEach((baseX, j) => {
+    for (let k = 0; k < 7 + (j * 3) % 6; k++) {
       p.px(baseX + Math.round(Math.sin(TAU * phase * 2 + k * 0.5 + j)), 57 - k, k % 2 ? '#2f8f5b' : '#257349');
     }
   });
 
-  const rx = 12 + s * 2.5, ry = 5 + s * 1.2, cx = 33;
-  const cy = activity === 0 ? 57 - ry : 30 + Math.round(Math.sin(TAU * phase * 2));
+  const rx = 12 + s * 2.5, ry = 5 + s * 1.2;
+  const crossings = activity === 2 ? 2 : 1, span = WIDTH + 2 * TRAVEL_MARGIN;
+  const cx = activity === 0 ? WIDTH / 2 : Math.round((phase * crossings * span) % span) - TRAVEL_MARGIN;
+  const cy = activity === 0 ? 57 - ry : 30 + Math.round(Math.sin(TAU * phase * 4));
 
   const towerX = cx - 3, towerTop = cy - ry - 4;
   const scopeHeight = 2 + Math.round(s * 2), scopeX = cx + 2, scopeTop = towerTop - scopeHeight;
@@ -197,10 +203,10 @@ export function drawFrame(submarine, frame) {
 }
 
 function upscale(pixels, scale) {
-  const size = SIZE * scale;
-  const out = new Uint8ClampedArray(size * size * 4);
-  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
-    const from = (Math.floor(y / scale) * SIZE + Math.floor(x / scale)) * 4, to = (y * size + x) * 4;
+  const width = WIDTH * scale, height = HEIGHT * scale;
+  const out = new Uint8ClampedArray(width * height * 4);
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    const from = (Math.floor(y / scale) * WIDTH + Math.floor(x / scale)) * 4, to = (y * width + x) * 4;
     out.set(pixels.subarray(from, from + 4), to);
   }
   return out;
@@ -212,11 +218,10 @@ export function encodeGif(submarine, scale) {
   const all = new Uint8ClampedArray(frames.length * frames[0].length);
   frames.forEach((frame, i) => all.set(frame, i * frame.length));
   const palette = quantize(all, 256);
-  const size = SIZE * scale;
   const gif = GIFEncoder();
   frames.forEach(frame => {
     const scaled = upscale(frame, scale);
-    gif.writeFrame(applyPalette(scaled, palette), size, size, { palette, delay: FRAME_DELAY_MS, repeat: 0 });
+    gif.writeFrame(applyPalette(scaled, palette), WIDTH * scale, HEIGHT * scale, { palette, delay: FRAME_DELAY_MS, repeat: 0 });
   });
   gif.finish();
   return gif.bytes();

@@ -1,5 +1,5 @@
 # Copy into your profile repository as .github/workflows/submarine.yml, then embed
-# <img src="https://raw.githubusercontent.com/<you>/<you>/submarine/submarine.gif" width="256">
+# <img src="https://raw.githubusercontent.com/<you>/<you>/submarine/submarine.gif" width="100%">
 # in its README.md.
 name: Submarine
 
@@ -20,7 +20,7 @@ jobs:
   submarine:
     runs-on: ubuntu-latest
     steps:
-      - uses: SebasB76/yellow-submarine@v1.0.1
+      - uses: SebasB76/yellow-submarine@v1.1.0
         with:
           utc-offset: "-5"
           output: out/submarine.gif
