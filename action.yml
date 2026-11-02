@@ -38,4 +38,4 @@ runs:
         SUBMARINE_UTC_OFFSET: ${{ inputs.utc-offset }}
       run: |
         node "$GITHUB_ACTION_PATH/src/index.mjs" "$SUBMARINE_LOGIN" \
-          --output "$SUBMARINE_OUTPUT" --utc-offset "$SUBMARINE_UTC_OFFSET"
+          --output "$SUBMARINE_OUTPUT" --utc-offset="$SUBMARINE_UTC_OFFSET"

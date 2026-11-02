@@ -20,7 +20,7 @@ jobs:
   submarine:
     runs-on: ubuntu-latest
     steps:
-      - uses: SebasB76/yellow-submarine@v1
+      - uses: SebasB76/yellow-submarine@v1.0.1
         with:
           utc-offset: "-5"
           output: out/submarine.gif

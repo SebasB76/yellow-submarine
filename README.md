@@ -44,7 +44,7 @@ Node 20 or newer, and the GitHub CLI signed in:
 
 ```sh
 npm ci
-node src/index.mjs <login> --output out/submarine.gif --utc-offset -5
+node src/index.mjs <login> --output out/submarine.gif --utc-offset=-5
 ```
 
 `--stage 1-4`, `--stripes 0-5`, `--activity 0-2`, `--ambient morning|afternoon|night`,
