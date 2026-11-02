@@ -14,7 +14,6 @@ const TAU = Math.PI * 2;
 const STRIPES = ['#e63946', '#2a9d8f', '#f4a261', '#9b5de5', '#3a86ff'];
 const YELLOW = '#f7d117';
 const OUTLINE = '#6b5200';
-const Z_GLYPH = ['####', '..#.', '.#..', '####'];
 const NOTE_GLYPH = ['..##', '..#.', '..#.', '###.', '##..'];
 const PORTHOLE_GLYPH = ['.##.', '#..#', '#..#', '.##.'];
 const BUBBLE_GLYPH = ['.#.', '#.#', '.#.'];
@@ -137,8 +136,11 @@ export function drawFrame(submarine, frame) {
 
   const rx = 12 + s * 2.5, ry = 5 + s * 1.2;
   const crossings = activity === 2 ? 2 : 1, span = WIDTH + 2 * TRAVEL_MARGIN;
-  const cx = activity === 0 ? WIDTH / 2 : Math.round((phase * crossings * span) % span) - TRAVEL_MARGIN;
-  const cy = activity === 0 ? 57 - ry : 30 + Math.round(Math.sin(TAU * phase * 4));
+  // A quiet day hovers mid-strip, waiting, instead of sleeping.
+  const cx = activity === 0
+    ? WIDTH / 2 + Math.round(Math.sin(TAU * phase) * 4)
+    : Math.round((phase * crossings * span) % span) - TRAVEL_MARGIN;
+  const cy = 30 + Math.round(Math.sin(TAU * phase * (activity === 0 ? 2 : 4)));
 
   const towerX = cx - 3, towerTop = cy - ry - 4;
   const scopeHeight = 2 + Math.round(s * 2), scopeX = cx + 2, scopeTop = towerTop - scopeHeight;
@@ -166,7 +168,7 @@ export function drawFrame(submarine, frame) {
   for (let i = 0; i < portholes; i++) {
     const hx = Math.round(cx - rx * 0.65 + spacing * (i + 0.5)), hy = Math.round(cy - 3);
     const blink = activity === 2 && (frame + i) % 6 < 3;
-    const glow = activity === 0 ? shade(WINDOW_LIGHT, -0.6) : shade(WINDOW_LIGHT, blink ? 0.45 : 0);
+    const glow = shade(WINDOW_LIGHT, blink ? 0.45 : 0);
     p.glyph(PORTHOLE_GLYPH, hx, hy, OUTLINE);
     p.rect(hx + 1, hy + 1, 2, 2, glow);
   }
@@ -174,28 +176,20 @@ export function drawFrame(submarine, frame) {
   const propX = Math.round(cx - rx - 1);
   p.px(propX, cy, '#555555');
   p.px(propX - 1, cy, '#8c8c8c');
-  const spin = activity === 0 ? 0 : Math.floor(frame / (activity === 2 ? 1 : 3)) % 2;
+  const spin = Math.floor(frame / [6, 3, 1][activity]) % 2;
   if (spin) p.rect(propX - 2, cy - 1, 1, 3, '#d9d9d9');
   else p.rect(propX - 2, cy - 3, 1, 7, '#d9d9d9');
 
-  if (activity > 0) {
-    for (let i = 0; i < activity * 4; i++) {
-      const life = (frame + i * 7) % 24;
-      const bx = propX - 3 - life * 0.5 + Math.sin(life * 0.5 + i), by = cy - life * 0.9;
-      if (i % 3 === 0) p.glyph(BUBBLE_GLYPH, bx, by, '#bfe9ff');
-      else p.px(bx, by, '#9fdcff');
-    }
+  for (let i = 0; i < [2, 4, 8][activity]; i++) {
+    const life = (frame + i * 7) % 24;
+    const bx = propX - 3 - life * 0.5 + Math.sin(life * 0.5 + i), by = cy - life * 0.9;
+    if (i % 3 === 0) p.glyph(BUBBLE_GLYPH, bx, by, '#bfe9ff');
+    else p.px(bx, by, '#9fdcff');
   }
   if (activity === 2) {
     for (let i = 0; i < 2; i++) {
       const life = (frame + i * 12) % 24;
       p.glyph(NOTE_GLYPH, scopeX + 5 + life * 0.35, scopeTop - 2 - life * 0.6, STRIPES[(i * 2 + Math.floor(frame / 24)) % STRIPES.length]);
-    }
-  }
-  if (activity === 0) {
-    for (let i = 0; i < 2; i++) {
-      const life = (frame * 0.5 + i * 6) % 12;
-      p.glyph(Z_GLYPH, scopeX + 4 + life * 0.4 + i * 3, scopeTop - 2 - life, mix('#ffffff', '#6b7c8f', life / 12));
     }
   }
   drawKeepsakes(p, submarine.keepsakes, submarine.ambient);

@@ -6,7 +6,7 @@ fills the README's width. A nightly workflow redraws it from the day that just
 ended.
 
 <img src="docs/day.gif" width="100%" alt="A grown submarine cruising across morning water, with all four keepsakes on the seabed" />
-<img src="docs/night.gif" width="100%" alt="A submarine resting on the seabed at night after a day without contributions" />
+<img src="docs/night.gif" width="100%" alt="A submarine hovering at night with its lights on after a day without contributions" />
 
 ## What changes it
 
@@ -14,7 +14,7 @@ ended.
 | --- | --- |
 | Total contributions, all years | Size: hull length, portholes, and periscope height |
 | Weekly streak: consecutive Monday-Sunday weeks with a contribution | One colored stripe per 4 weeks, up to 5 |
-| Contributions on the day that just ended | Busy: crosses twice per loop with bubbles and music notes. Some: crosses once. None: asleep on the seabed |
+| Contributions on the day that just ended | Busy: crosses twice per loop with bubbles and music notes. Some: crosses once. None: hovers mid-strip with lights on, waiting |
 | Hour of your public events in the last 7 days | Water: morning light, afternoon sunset, or night with moon and plankton |
 | Contribution milestones 100, 500, 1,000, 2,500 | A keepsake on the seabed: John's glasses, Paul's violin bass, George's sitar, Ringo's bass drum |
 
