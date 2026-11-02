@@ -1,0 +1,41 @@
+name: yellow-submarine
+description:
+  Draw a pixel-art Yellow Submarine from a GitHub account's public activity, as
+  a looping GIF for a profile README.
+branding:
+  icon: anchor
+  color: yellow
+
+inputs:
+  login:
+    description: Account whose submarine to draw.
+    default: ${{ github.repository_owner }}
+  output:
+    description: Path, relative to the workspace, that receives the GIF.
+    default: submarine/submarine.gif
+  utc-offset:
+    description: Hours from UTC used to sort your work into morning, afternoon, or night.
+    default: "0"
+  token:
+    description: Token for reading the account's public data; the built-in token is enough.
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 22
+    - name: Install the generator
+      shell: bash
+      run: npm ci --omit=dev --prefix "$GITHUB_ACTION_PATH"
+    - name: Draw the submarine
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        SUBMARINE_LOGIN: ${{ inputs.login }}
+        SUBMARINE_OUTPUT: ${{ inputs.output }}
+        SUBMARINE_UTC_OFFSET: ${{ inputs.utc-offset }}
+      run: |
+        node "$GITHUB_ACTION_PATH/src/index.mjs" "$SUBMARINE_LOGIN" \
+          --output "$SUBMARINE_OUTPUT" --utc-offset "$SUBMARINE_UTC_OFFSET"

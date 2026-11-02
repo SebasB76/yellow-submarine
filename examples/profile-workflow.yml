@@ -1,0 +1,40 @@
+# Copy into your profile repository as .github/workflows/submarine.yml, then embed
+# <img src="https://raw.githubusercontent.com/<you>/<you>/submarine/submarine.gif" width="256">
+# in its README.md.
+name: Submarine
+
+on:
+  schedule:
+    # 00:20 in UTC-5, so the submarine shows the day that just ended there.
+    - cron: "20 5 * * *"
+  workflow_dispatch:
+  push:
+    paths: [.github/workflows/submarine.yml]
+
+permissions:
+  contents: write
+
+concurrency: submarine
+
+jobs:
+  submarine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: SebasB76/yellow-submarine@v1
+        with:
+          utc-offset: "-5"
+          output: out/submarine.gif
+      # The branch holds only the latest GIF, so the repository does not grow every night.
+      - name: Publish the GIF to the submarine branch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd out
+          git init --quiet --initial-branch submarine
+          git add submarine.gif
+          git -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit --quiet --message "submarine: draw the day's submarine"
+          git push --quiet --force \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" submarine

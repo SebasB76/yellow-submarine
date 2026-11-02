@@ -1,0 +1,13 @@
+{
+  "name": "yellow-submarine",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Draw a pixel-art Yellow Submarine from a GitHub account's public activity, as a looping GIF for a profile README.",
+  "type": "module",
+  "bin": { "yellow-submarine": "src/index.mjs" },
+  "engines": { "node": ">=20" },
+  "license": "MIT",
+  "dependencies": {
+    "gifenc": "1.0.3"
+  }
+}
